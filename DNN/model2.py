@@ -72,7 +72,7 @@ class Model():
         return logits, end_points
 
     def build(self):
-        self.continous_inputs = tf.placeholder(tf.float32, [None,4], name='continous_inputs')
+        self.continous_inputs = tf.placeholder(tf.float32, [None,6], name='continous_inputs')
         #self.categorial_inputs = tf.placeholder(tf.float32, [None,26], name='categorial_inputs')
         self.categorial_inputs = tf.placeholder(tf.float32, name='categorial_inputs')
         self.label = tf.placeholder(tf.float32, name='label')

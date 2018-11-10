@@ -36,7 +36,7 @@ def train_model(batch_size=FLAGS.batch_size):
     categorial_data = inputs[:,FLAGS.encod_cat_index_begin:FLAGS.encod_cat_index_end]
     logging.debug('oridata_dim:{}'.format(categorial_data.shape[1]))
     count_data = lables.shape[0]
-    logging.debug('count_data:{}'.format(count_data))
+    logging.info('count_data:{}'.format(count_data))
 
     try:
         dictsizes = pd.read_csv(FLAGS.dictsizefile)
@@ -88,6 +88,9 @@ def train_model(batch_size=FLAGS.batch_size):
             train_loss_list=[]
             train_auc_list = []
             train_accuracy_list = []
+            tlogits_list = []
+            tpre_list = []
+            tlabels_list = []
             for step in range(len(inputs) // batch_size):
                 batch_inputs,batch_lables = next(batches)
                 continous_inputs = batch_inputs[:, 0:FLAGS.encod_cat_index_begin]
@@ -99,9 +102,9 @@ def train_model(batch_size=FLAGS.batch_size):
                 train_loss_list.append(loss)
                 train_auc_list.append(auc[0])
                 train_accuracy_list.append(accuracy)
-                #np.savetxt('./log/tlogits.log', end_points['logits'])
-                #np.savetxt('./log/tpre.log', end_points['prediction'])
-                #np.savetxt('./log/tlabels.log', labels)
+                tlogits_list.append(end_points['logits'])
+                tpre_list.append(end_points['prediction'])
+                tlabels_list.append(labels)
                 if global_step % FLAGS.logfrequency == 0:
                     #每间隔指定的频率打印日志并存储checkpoint文件
                     logging.debug('train: step [{0}] loss [{1}] auc [{2}] accuracy [{3}]'.format(global_step, loss, auc, accuracy))
@@ -116,6 +119,12 @@ def train_model(batch_size=FLAGS.batch_size):
             train_loss = np.mean(train_loss_list)
             train_auc = np.mean(train_auc_list, 0)
             train_accuracy = np.mean(train_accuracy_list)
+            #tlogits = np.array(tlogits_list).reshape((-1,8))
+            tpre = np.array(tpre_list).reshape((-1))
+            tlabels = np.array(tlabels_list).reshape((-1))
+            #np.savetxt( FLAGS.outlog_dir + '/tlogits.log', tlogits)
+            np.savetxt( FLAGS.outlog_dir + '/tpre.log', tpre)
+            np.savetxt( FLAGS.outlog_dir + '/tlabels.log', tlabels)
 
             logging.debug('----------------------valid-----------------------')
             #使用验证数据，验证模型性能
@@ -134,6 +143,9 @@ def train_model(batch_size=FLAGS.batch_size):
                 loss_list = []
                 auc_list = []
                 accuracy_list = []
+                vlogits_list = []
+                vpre_list = []
+                vlabels_list = []
                 for step in range(len(valid_inputs) // batch_size):
                     batch_valid_inputs,batch_valid_lables = next(valid_batches)
                     valid_continous_inputs = batch_valid_inputs[:, 0:FLAGS.encod_cat_index_begin]
@@ -144,15 +156,21 @@ def train_model(batch_size=FLAGS.batch_size):
                     loss_list.append(loss)
                     auc_list.append(auc[0])
                     accuracy_list.append(accuracy)
-                    #np.savetxt('./log/logits.log', end_points['logits'])
-                    #np.savetxt('./log/pre.log', end_points['prediction'])
-                    #np.savetxt('./log/labels.log', labels)
+                    vlogits_list.append(end_points['logits'])
+                    vpre_list.append(end_points['prediction'])
+                    vlabels_list.append(labels)
                     #if step % FLAGS.logfrequency == 0:
                         #每间隔指定的频率打印日志并存储checkpoint文件
                      #   logging.info('valid: step [{0}] loss [{1}] auc [{2}] accuracy [{3}]'.format(global_step, loss, auc, accuracy))
                 valid_loss = np.mean(loss_list)
                 valid_auc = np.mean(auc_list,0)
                 valid_accuracy = np.mean(accuracy_list)
+                #vlogits = np.array(vlabels_list).reshape((-1,8))
+                vpre = np.array(vpre_list).reshape((-1))
+                vlabels = np.array(vlabels_list).reshape((-1))
+                #np.savetxt( FLAGS.outlog_dir + '/vlogits.log', vlogits)
+                np.savetxt( FLAGS.outlog_dir + '/vpre.log', vpre)
+                np.savetxt( FLAGS.outlog_dir + '/vlabels.log', vlabels)
                 logging.debug( 'valid: step [{0}] loss [{1}] auc [{2}] accuracy [{3}]'.format(global_step, valid_loss, valid_auc, valid_accuracy))
 
             #epoch = (global_step * batch_size) // count_data
